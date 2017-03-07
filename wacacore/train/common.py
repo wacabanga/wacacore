@@ -10,19 +10,6 @@ import tensorflow as tf
 from tensorflow import Graph, Tensor, Session
 import os
 
-def accumulate_losses(tensors: List[Tensor]) -> Tensor:
-    """
-    Mean of list of tensors of arbitrary size
-    Args:
-        tensors: list of tensors
-
-    Returns:
-        mean tensor
-    """
-    with tf.name_scope('loss'):
-        return tf.add_n([tf.reduce_mean(t) for t in tensors]) / len(tensors)
-
-
 def layer_width(i, o, n, p):
     """Compute the layer width for a desired number of parameters
     Args:
@@ -37,68 +24,6 @@ def layer_width(i, o, n, p):
     c = o - p
     inner = np.sqrt(b*b - 4*a*c)
     return (-b + inner)/(2*a), (-b - inner)/(2*a)
-
-
-def get_tf_num_params(arrow):
-    graph = tf.Graph()
-    with graph.as_default():
-        input_tensors = gen_input_tensors(arrow, param_port_as_var=False)
-        output_tensors = arrow_to_graph(arrow, input_tensors)
-        vs = tf.global_variables()
-        return sum([v.get_shape().num_elements() for v in vs])
-
-def extract_tensors(arrow: Arrow,
-                    extra_ports=[],
-                    append_default=True,
-                    grabs=None,
-                    optional=None):
-    """
-    Converts an arrow into a graph and extracts tensors which correspond to
-    ports with particular properties
-    Args:
-        arrow: arrow to convert
-        grabs: dict {name: filter function}
-        append_default: append to default grabs, if false then replaces it
-    Returns:
-
-    """
-    optional = set() if optional is None else optional
-    def_grabs   = {'input': lambda p: is_in_port(p) and not is_param_port(p),
-                   'param': lambda p: is_param_port(p),
-                   'error': lambda p: is_error_port(p),
-                   'output': lambda p: is_out_port(p)}
-
-    _grabs = {}
-    if append_default:
-        _grabs.update(def_grabs)
-
-    _grabs.update(grabs)
-
-    # Convert to tensorflow graph and get input, output, error, and parma_tensors
-    with tf.name_scope(arrow.name):
-        input_tensors = gen_input_tensors(arrow, param_port_as_var=False)
-        port_grab = {p: None for p in extra_ports}
-        output_tensors = arrow_to_graph(arrow, input_tensors, port_grab=port_grab)
-
-    extra_tensors = list(port_grab.values())
-    output = {}
-    for grab_key, grab_func in _grabs.items():
-        all_dem  = []
-        for i, t in enumerate(input_tensors):
-            if grab_func(arrow.in_port(i)):
-                all_dem.append(t)
-        for i, t in enumerate(output_tensors):
-            if grab_func(arrow.out_port(i)):
-                all_dem.append(t)
-        # for port, t in port_grab:
-        #     if grab_func(port):
-        #         all_dem.append(t)
-        assert grab_key in optional or len(all_dem) > 0, "%s empty" % grab_key
-        if len(all_dem) > 0:
-            output[grab_key] = all_dem
-
-    output['extra'] = extra_tensors
-    return output
 
 
 def prep_save(sess: Session, save: bool, dirname: str, params_file: str, load: bool):
@@ -134,6 +59,21 @@ def gen_update_step(loss: Tensor) -> Tensor:
         optimizer = tf.train.AdamOptimizer(0.01)
         update_step = optimizer.minimize(loss)
         return update_step
+
+
+def get_updates(loss: Tensor, options):
+    with tf.name_scope("optimization"):
+        if options['update'] == 'momentum':
+            optimizer = tf.train.MomentumOptimizer(learning_rate=options['learning_rate'],
+                                                   momentum=options['momentum'])
+        elif options['update'] == 'adam':
+            optimizer = tf.train.AdamOptimizer(learning_rate=options['learning_rate'])
+        elif options['update'] == 'rmsprop':
+            optimizer = tf.train.RMSPropOptimizer(learning_rate=options['learning_rate'])
+        else:
+            assert False, "Unknown loss minimizer"
+        update_step = optimizer.minimize(loss)
+        return optimizer, update_step
 
 
 def train_loop(sess: Session,
@@ -183,7 +123,7 @@ def train_loop(sess: Session,
         fetch_res = sess.run(curr_fetch, feed_dict=feed_dict)
 
         # Evaluate on test data every test_every iterations
-        if i % test_every == 0 or i == num_iterations - 1:
+        if test_generators is not None and (i % test_every == 0 or i == num_iterations - 1):
             test_feed_dict = {}
             for gen in test_generators:
                 sub_feed_dict = next(gen)
@@ -197,3 +137,4 @@ def train_loop(sess: Session,
         for cb in callbacks:
             cb(fetch_res, feed_dict, i, num_iterations=num_iterations, state=state, **callback_dict)
         print("Iteration: ", i, " Loss: ", fetch_res['loss'])
+        print("Iteration: ", i, " Losses: ", fetch_res['losses'])

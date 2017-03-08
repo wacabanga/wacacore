@@ -1,4 +1,4 @@
-from typing import List, Generator, Callable
+from typing import List, Generator, Callable, Sequence
 import tensorflow as tf
 from tensorflow import Graph, Tensor, Session
 import os

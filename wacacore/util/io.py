@@ -131,7 +131,7 @@ def mk_dir(sfx='',
         newdirname = str(time.time()) + sfx
     else:
         newdirname = dirname
-    full_dir_name = os.path.join(datadir, "rf", newdirname)
+    full_dir_name = os.path.join(datadir, newdirname)
     print("Data will be saved to", full_dir_name)
     os.mkdir(full_dir_name)
     return full_dir_name

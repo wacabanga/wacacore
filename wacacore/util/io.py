@@ -63,24 +63,42 @@ def handle_args(argv, cust_opts):
     custom_long_opts = ["%s=" % k for k in cust_opts.keys()]
     cust_double_dash = ["--%s" % k for k in cust_opts.keys()]
     parser = PassThroughOptionParser()
-    parser.add_option('-l', '--learning_rate', dest='learning_rate',
-                      nargs=1, type='int')
+    parser.add_option('-l',
+                      '--learning_rate',
+                      dest='learning_rate',
+                      nargs=1,
+                      type='int')
 
     # Way to set default values
     # some flags affect more than one thing
     # some things need to set otherwise everything goes to shit
     # some things need to be set if other things are set
 
-    long_opts = ["params_file=", "learning_rate=", "momentum=", "update=",
-                 "description=", "template=", "batch_size="]
+    long_opts = ["params_file=",
+                 "learning_rate=",
+                 "momentum=",
+                 "update=",
+                 "description=",
+                 "template=",
+                 "batch_size=",
+                 "save"]
     long_opts = long_opts + custom_long_opts
-    options = {'params_file': '', 'learning_rate': 0.1, 'momentum': 0.9,
-               'load': False, 'update': 'momentum', 'description': '',
-               'template': 'res_net', 'batch_size': 128}
-    help_msg = """-p <paramfile> -l <learning_rate> -m <momentum>
-                  -u <update algorithm> -d <job description> -t <template>"""
+    options = {'params_file': '',
+               'learning_rate': 0.1,
+               'momentum': 0.9,
+               'load': False,
+               'update': 'momentum',
+               'description': '',
+               'template': 'res_net',
+               'batch_size': 128}
+    help_msg = """-p <paramfile>
+                  -l <learning_rate>
+                  -m <momentum>
+                  -u <update algorithm>
+                  -d <job description>
+                  -t <template>"""
     try:
-        opts, args = getopt.getopt(argv, "hp:l:m:u:d:t:", long_opts)
+        opts, args = getopt.getopt(argv, "hp:l:m:u:d:t:s", long_opts)
     except getopt.GetoptError:
         print("invalid options")
         print(help_msg)
@@ -92,6 +110,8 @@ def handle_args(argv, cust_opts):
         elif opt in ("-p", "--params_file"):
             options['params_file'] = arg
             options['load'] = True
+        elif opt in ("-s", "--save"):
+            options['save'] = True
         elif opt in ("-l", "--learning_rate"):
             options['learning_rate'] = float(arg)
         elif opt in ("-m", "--momentum"):
@@ -118,7 +138,9 @@ def handle_args(argv, cust_opts):
     # add defaults back
     for (key, val) in cust_opts.items():
         if key not in options:
-            options[key] = val[-1]
+            parser = val[0]
+            value = val[1]
+            options[key] = parser(value)
 
     print(options)
     return options

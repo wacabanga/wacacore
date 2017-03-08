@@ -1,7 +1,8 @@
+"""Common functions for training"""
 from typing import List, Generator, Callable, Sequence
 import tensorflow as tf
 from tensorflow import Graph, Tensor, Session
-import os
+import numpy as np
 
 def layer_width(i, o, n, p):
     """Compute the layer width for a desired number of parameters
@@ -45,16 +46,12 @@ def gen_fetch(sess: Session,
     return fetch
 
 
-def gen_update_step(loss: Tensor) -> Tensor:
-    with tf.name_scope('optimization'):
-        # optimizer = tf.train.MomentumOptimizer(0.001,
-        #                                        momentum=0.1)
-        optimizer = tf.train.AdamOptimizer(0.01)
-        update_step = optimizer.minimize(loss)
-        return update_step
-
-
 def get_updates(loss: Tensor, options):
+    """Generate an update tensor which when executed will perform an
+    optimization step
+    Args:
+        loss: a loss tensor to be minimized
+    """
     with tf.name_scope("optimization"):
         if options['update'] == 'momentum':
             optimizer = tf.train.MomentumOptimizer(learning_rate=options['learning_rate'],

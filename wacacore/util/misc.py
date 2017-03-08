@@ -4,7 +4,11 @@ import string
 import random
 from functools import reduce
 from typing import Dict, Sequence, Any, TypeVar
+import numpy as np
 T = TypeVar('T')
+
+def identity(x):
+    return x
 
 
 def rand_string(n):

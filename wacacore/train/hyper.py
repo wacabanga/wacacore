@@ -1,6 +1,6 @@
 """Hyper Parameter Search"""
 from wacacore.util.misc import extract, dict_prod
-
+import numpy as np
 
 def rand_product(run_me, options, var_option_keys, prefix='', nrepeats=1):
     """Train parametric inverse and vanilla neural network with different
@@ -17,15 +17,13 @@ def rand_product(run_me, options, var_option_keys, prefix='', nrepeats=1):
     var_options = extract(var_option_keys, options)
 
     for i in range(nrepeats):
-        var_options_prod = dict_prod(var_options)
+        var_options_prod = list(dict_prod(var_options))
         the_time = time.time()
         for j, prod in enumerate(var_options_prod):
             dirname = "%s_%s_%s_%s" % (prefix, str(the_time), i, j)
             _options['dirname'] = dirname
             _options.update(prod)
             run_me(_options)
-
-
 
 def test_everything(run_me, options, var_option_keys, prefix='', nrepeats=1):
     """Train parametric inverse and vanilla neural network with different

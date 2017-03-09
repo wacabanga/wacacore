@@ -4,6 +4,7 @@ import csv
 import time
 import sys
 from optparse import (OptionParser,BadOptionError,AmbiguousOptionError)
+from wacacore.util.misc import stringy_dict
 
 
 def save_params(fname, params):
@@ -22,22 +23,32 @@ def save_dict_csv(fname, params):
     f.close()
 
 
-def get_filepaths(directory):
-    """
-    This function will generate the file names in a directory
-    tree by walking the tree either top-down or bottom-up. For each
-    directlds a 3-tuple (dirpath, dirnames, filenames).
-    """
-    file_paths = []  # List which will store all of the full filepaths.
+def append_time(sfx):
+    return "%s%s" % (str(time.time()), sfx)
 
-    # Walk the tree.
-    for root, directories, files in os.walk(directory):
-        for filename in files:
-            # Join the two strings in order to form the full filepath.
-            filepath = os.path.join(root, filename)
-            file_paths.append(filepath)  # Add it to the list.
 
-    return file_paths  # Self-explanatory.
+def gen_sfx_key(keys, options, add_time=True):
+    sfx_dict = {}
+    for key in keys:
+        sfx_dict[key] = options[key]
+    sfx = stringy_dict(sfx_dict)
+    if add_time is True:
+        sfx = append_time(sfx)
+    print("sfx:", sfx)
+    return sfx
+
+def mk_dir(dirname, datadir=os.environ['DATADIR']):
+    """Create directory with timestamp
+    Args:
+        sfx: a suffix string
+        dirname:
+        datadir: directory of all data
+    """
+    import pdb; pdb.set_trace()
+    full_dir_name = os.path.join(datadir, dirname)
+    print("Data will be saved to", full_dir_name)
+    os.mkdir(full_dir_name)
+    return full_dir_name
 
 
 class PassThroughOptionParser(OptionParser):
@@ -73,7 +84,6 @@ def handle_args(argv, cust_opts):
     # some flags affect more than one thing
     # some things need to set otherwise everything goes to shit
     # some things need to be set if other things are set
-
     long_opts = ["params_file=",
                  "learning_rate=",
                  "momentum=",
@@ -144,16 +154,3 @@ def handle_args(argv, cust_opts):
 
     print(options)
     return options
-
-def mk_dir(sfx='',
-           dirname=None,
-           datadir = os.environ['DATADIR']):
-    "Create directory with timestamp"
-    if dirname is None:
-        newdirname = str(time.time()) + sfx
-    else:
-        newdirname = dirname
-    full_dir_name = os.path.join(datadir, newdirname)
-    print("Data will be saved to", full_dir_name)
-    os.mkdir(full_dir_name)
-    return full_dir_name

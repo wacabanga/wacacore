@@ -46,11 +46,11 @@ def save_callback(fetch_data,
 def save_every_n(fetch_data, feed_dict, i, save_every=100, **kwargs):
     state = kwargs['state']
     if 'all_loss' in state:
-        for k, v in fetch_data['loss'].items():
+        for k, v in fetch_data['losses'].items():
             state['all_loss'][k] += [v]
     else:
         state['all_loss'] = {}
-        for k, v in fetch_data['loss'].items():
+        for k, v in fetch_data['losses'].items():
             state['all_loss'][k] = [v]
 
 

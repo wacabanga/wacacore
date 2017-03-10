@@ -64,7 +64,8 @@ def save_everything_last(fetch_data,
                          **kwargs):
     """Saves everything on the last iteration"""
     num_iterations = kwargs['num_iterations']
-    if i == (num_iterations - 1):
+    save = 'save' in kwargs and kwargs['save'] is True
+    if save and i == (num_iterations - 1):
         savedir = kwargs['savedir']
         path = os.path.join(savedir, "state.pickle")
         pickle_it(kwargs['state'], path)
@@ -74,7 +75,7 @@ def save_everything_last(fetch_data,
 def save_options(fetch_data, feed_dict, i: int, **kwargs):
     """Save the options"""
     save = 'save' in kwargs and kwargs['save'] is True
-    if i == 0 and save:
+    if save and i == 0:
         savedir = kwargs['savedir']
         options_dir = "options"
         valid_types = [list, str, float, int]

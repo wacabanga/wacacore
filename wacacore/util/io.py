@@ -44,7 +44,6 @@ def mk_dir(dirname, datadir=os.environ['DATADIR']):
         dirname:
         datadir: directory of all data
     """
-    import pdb; pdb.set_trace()
     full_dir_name = os.path.join(datadir, dirname)
     print("Data will be saved to", full_dir_name)
     os.mkdir(full_dir_name)

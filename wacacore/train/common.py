@@ -12,47 +12,11 @@ def do_load(options):
 def do_save(options):
     return inn(options, 'save', 'dirname', 'datadir')
 
-def prep_save(sess: Session, save: bool, dirname: str, params_file: str,
-              data_dir: str, load: bool):
-    """Construct Saver Object"""
-    save_params = {}
-    if save is True or load is True:
-        saver = tf.train.Saver()
-        save_params['saver'] = saver
-    if save is True:
-        save_dir = mk_dir(dirname=dirname, datadir=data_dir)
-        save_params['save_dir'] = save_dir
-    if load is True:
-        saver.restore(sess, params_file)
-    return save_params
-
 def prep_load(sess, saver, params_file):
     saver.restore(sess, params_file)
 
 def prep_save(dirname, datadir):
-    save_dir = mk_dir(dirname=dirname, datadir=data_dir)
-
-def prep_save_new(options):
-    sess = options['sess']
-    save = 'save' in options and options['save'] is True
-    path = 'dirname' in options and 'datadir' in options
-    save = save and path
-
-    load = 'load' in options and options['load'] is True
-    has_params_file = 'params_file' in options
-    params_file = options['params_file']
-    load = load and params_file
-
-    save_params = {}
-    if save or load:
-        saver = tf.train.Saver()
-        save_params['saver'] = saver
-    if save:
-        save_dir = mk_dir(dirname=dirname, datadir=data_dir)
-        save_params['save_dir'] = save_dir
-    if load:
-        saver.restore(sess, params_file)
-    return save_params
+    return mk_dir(dirname=dirname, datadir=datadir)
 
 def gen_fetch(sess: Session,
               debug=False,

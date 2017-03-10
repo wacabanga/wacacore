@@ -27,9 +27,9 @@ def save_callback(fetch_data,
                   compress=False,
                   pfx = '',
                   **kwargs):
-    sess = kwargs['sess']
-    save = kwargs['save']
+    save = 'save' in kwargs and kwargs['save'] is True
     if  save:
+        sess = kwargs['sess']
         save_dir = kwargs['save_dir']
         print("Saving")
         saver = kwargs['saver']
@@ -73,7 +73,7 @@ def save_everything_last(fetch_data,
 
 def save_options(fetch_data, feed_dict, i: int, **kwargs):
     """Save the options"""
-    save = kwargs['save']
+    save = 'save' in kwargs and kwargs['save'] is True
     if i == 0 and save:
         save_dir = kwargs['save_dir']
         options_dir = "options"

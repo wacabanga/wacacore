@@ -90,7 +90,8 @@ def handle_args(argv, cust_opts):
                  "description=",
                  "template=",
                  "batch_size=",
-                 "save"]
+                 "save",
+                 "train"]
     long_opts = long_opts + custom_long_opts
     options = {'params_file': '',
                'learning_rate': 0.1,
@@ -105,9 +106,10 @@ def handle_args(argv, cust_opts):
                   -m <momentum>
                   -u <update algorithm>
                   -d <job description>
-                  -t <template>"""
+                  -t <template>
+                  -r <train>"""
     try:
-        opts, args = getopt.getopt(argv, "hp:l:m:u:d:t:s", long_opts)
+        opts, args = getopt.getopt(argv, "hp:l:m:u:d:t:sr", long_opts)
     except getopt.GetoptError:
         print("invalid options")
         print(help_msg)
@@ -121,6 +123,8 @@ def handle_args(argv, cust_opts):
             options['load'] = True
         elif opt in ("-s", "--save"):
             options['save'] = True
+        elif opt in ("-t", "--train"):
+            options['train'] = True
         elif opt in ("-l", "--learning_rate"):
             options['learning_rate'] = float(arg)
         elif opt in ("-m", "--momentum"):

@@ -6,6 +6,8 @@
 import os
 import pickle
 import csv
+import sys
+import math
 
 def save_it_csv(params, fname):
     f = open(fname, 'w')
@@ -57,16 +59,16 @@ def save_every_n(fetch_data, feed_dict, i, save_every=100, **kwargs):
     if i % save_every == 0:
         save_callback(fetch_data, feed_dict, i, **kwargs)
 
-import sys
-import math
+
 def nan_cancel(fetch_data,
-              feed_dict,
-              i: int,
-              **kwargs):
+               feed_dict,
+               i: int,
+               **kwargs):
     """Cancel on NaN in loss"""
     if 'loss' in fetch_data and math.isnan(fetch_data['loss']):
         print("NaNs found")
         sys.exit()
+
 
 def save_everything_last(fetch_data,
                          feed_dict,

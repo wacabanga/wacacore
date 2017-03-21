@@ -4,9 +4,10 @@ import numpy as np
 
 # Minibatching
 def infinite_samples(sampler, batch_size, shape, add_batch=False):
+    if add_batch:
+        shape = (batch_size,)+shape
+    
     while True:
-        if add_batch:
-            shape = (batch_size,)+shape
         yield sampler(*shape)
 
 def repeated_random(sampler, batchsize, nrepeats, shape):

@@ -5,6 +5,7 @@ import tensorflow as tf
 from tensorflow import Graph, Tensor, Session
 from typing import List, Generator, Callable, Sequence
 import numpy as np
+import pdb
 
 def do_load(options):
     return 'load' in options and options['load'] and 'params_file' in options
@@ -30,7 +31,21 @@ def gen_fetch(sess: Session,
     return fetch
 
 
-def get_updates(loss: Tensor, options):
+def variable_summaries(losses):
+    """Attach a lot of summaries to a Tensor (for TensorBoard visualization)."""
+    with tf.name_scope('summaries'):
+        for loss_name, loss_tensor in losses.items():
+            tf.summary.scalar(loss_name, loss_tensor)
+    return tf.summary.merge_all()
+
+
+def setup_file_writers(summaries_dir, sess):
+    # Merge all the summaries and write them out to /tmp/mnist_logs (by default)
+    train_writer = tf.summary.FileWriter(summaries_dir, sess.graph)
+    return [train_writer]
+    # test_writer = tf.summary.FileWriter(summaries_dir + '/test')
+
+def updates(loss: Tensor, var_list, options):
     """Generate an update tensor which when executed will perform an
     optimization step
     Args:
@@ -46,7 +61,7 @@ def get_updates(loss: Tensor, options):
             optimizer = tf.train.RMSPropOptimizer(learning_rate=options['learning_rate'])
         else:
             assert False, "Unknown loss minimizer"
-        update_step = optimizer.minimize(loss)
+        update_step = optimizer.minimize(loss, var_list=var_list)
         return optimizer, update_step
 
 def gen_feed_dict(generators, remove_update=False):
@@ -64,8 +79,8 @@ def gen_feed_dict(generators, remove_update=False):
 def train_loop(sess: Session,
                loss_updates: Sequence[Tensor],
                fetch,
-               generators: Sequence[Generator],
-               test_generators,
+               train_generators: Sequence[Generator],
+               test_generators: Sequence[Generator],
                loss_ratios: Sequence[int]=None,
                test_every=100,
                num_iterations=100000,
@@ -76,7 +91,7 @@ def train_loop(sess: Session,
         sess: Tensorflow session
         loss_updates: gradient update tensors
         fetch: Dictionary/List whose leaves are tensors to record every it.
-        generators: a sequence of generators. A generator should return
+        train_generators: a sequence of train_generators. A generator should return
             a dict {tensor: value}.  The union of all the dicts is passed as
             feed_dict in the gradient steps.
         test_generators: Like generators but for test_data
@@ -86,6 +101,7 @@ def train_loop(sess: Session,
         num_iterations: number of iterations
         callbacks: functions to be called with result from fetch
     """
+    #pdb.set_trace()
     # Default 1 for loss_ratios and normalize
     loss_ratios = [1 for i in range(len(loss_updates))] if loss_ratios is None else loss_ratios
     loss_ratios = loss_ratios / np.sum(loss_ratios)
@@ -103,7 +119,7 @@ def train_loop(sess: Session,
         curr_fetch = {}
         curr_fetch.update(fetch)
         curr_fetch["update_loss"] = np.random.choice(loss_updates, p=loss_ratios)
-        feed_dict = gen_feed_dict(generators)
+        feed_dict = gen_feed_dict(train_generators)
         fetch_res = sess.run(curr_fetch, feed_dict=feed_dict)
 
         # Evaluate on test data every test_every iterations
@@ -112,6 +128,7 @@ def train_loop(sess: Session,
             test_fetch_res = sess.run(fetch, feed_dict=test_feed_dict)
             fetch_res['test_fetch_res'] = test_fetch_res
             print("Test Loss", test_fetch_res['loss'])
+            print("Test Losses", test_fetch_res['losses'])
 
         # Do all call backs
         for cb in callbacks:

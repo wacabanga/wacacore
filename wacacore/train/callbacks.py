@@ -6,6 +6,8 @@
 import os
 import pickle
 import csv
+import sys
+import math
 
 def save_it_csv(params, fname):
     f = open(fname, 'w')
@@ -20,6 +22,15 @@ def pickle_it(data, savedir):
         # Pickle the 'data' dictionary using the highest protocol available.
         pickle.dump(data, f, pickle.HIGHEST_PROTOCOL)
     f.close()
+
+
+def every_n(callback, n):
+    "Higher order function that makes a callback run just once every n"
+    def every_n_fb(fetch_data, feed_dict, i, **kwargs):
+        if i % n == 0:
+            callback(fetch_data, feed_dict, i, **kwargs)
+    return every_n_fb
+
 
 def save_callback(fetch_data,
                   feed_dict,
@@ -58,6 +69,16 @@ def save_every_n(fetch_data, feed_dict, i, save_every=100, **kwargs):
         save_callback(fetch_data, feed_dict, i, **kwargs)
 
 
+def nan_cancel(fetch_data,
+               feed_dict,
+               i: int,
+               **kwargs):
+    """Cancel on NaN in loss"""
+    if 'loss' in fetch_data and math.isnan(fetch_data['loss']):
+        print("NaNs found")
+        sys.exit()
+
+
 def save_everything_last(fetch_data,
                          feed_dict,
                          i: int,
@@ -86,3 +107,12 @@ def save_options(fetch_data, feed_dict, i: int, **kwargs):
         stats_path = os.path.join(savedir, options_dir)
         pickle_it(to_save_options, "%s.pickle" % stats_path)
         save_it_csv(to_save_options, "%s.csv" % stats_path)
+
+
+def summary_writes(fetch_data, feed_dict, i: int, **kwargs):
+    print("Writing Summaries")
+    summary = fetch_data['summaries']
+    writers = kwargs['writers']
+    for writer in writers:
+        writer.add_summary(summary, i)
+        writer.flush()

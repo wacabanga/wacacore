@@ -30,7 +30,21 @@ def gen_fetch(sess: Session,
     return fetch
 
 
-def get_updates(loss: Tensor, options):
+def variable_summaries(losses):
+    """Attach a lot of summaries to a Tensor (for TensorBoard visualization)."""
+    with tf.name_scope('summaries'):
+        for loss_name, loss_tensor in losses.items():
+            tf.summary.scalar(loss_name, loss_tensor)
+    return tf.summary.merge_all()
+
+
+def setup_file_writers(summaries_dir, sess):
+    # Merge all the summaries and write them out to /tmp/mnist_logs (by default)
+    train_writer = tf.summary.FileWriter(summaries_dir, sess.graph)
+    return [train_writer]
+    # test_writer = tf.summary.FileWriter(summaries_dir + '/test')
+
+def updates(loss: Tensor, var_list, options):
     """Generate an update tensor which when executed will perform an
     optimization step
     Args:
@@ -46,7 +60,7 @@ def get_updates(loss: Tensor, options):
             optimizer = tf.train.RMSPropOptimizer(learning_rate=options['learning_rate'])
         else:
             assert False, "Unknown loss minimizer"
-        update_step = optimizer.minimize(loss)
+        update_step = optimizer.minimize(loss, var_list=var_list)
         return optimizer, update_step
 
 def gen_feed_dict(generators, remove_update=False):

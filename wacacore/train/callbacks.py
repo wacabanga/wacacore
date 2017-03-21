@@ -23,6 +23,15 @@ def pickle_it(data, savedir):
         pickle.dump(data, f, pickle.HIGHEST_PROTOCOL)
     f.close()
 
+
+def every_n(callback, n):
+    "Higher order function that makes a callback run just once every n"
+    def every_n_fb(fetch_data, feed_dict, i, **kwargs):
+        if i % n == 0:
+            callback(fetch_data, feed_dict, i, **kwargs)
+    return every_n_fb
+
+
 def save_callback(fetch_data,
                   feed_dict,
                   i: int,
@@ -98,3 +107,12 @@ def save_options(fetch_data, feed_dict, i: int, **kwargs):
         stats_path = os.path.join(savedir, options_dir)
         pickle_it(to_save_options, "%s.pickle" % stats_path)
         save_it_csv(to_save_options, "%s.csv" % stats_path)
+
+
+def summary_writes(fetch_data, feed_dict, i: int, **kwargs):
+    print("Writing Summaries")
+    summary = fetch_data['summaries']
+    writers = kwargs['writers']
+    for writer in writers:
+        writer.add_summary(summary, i)
+        writer.flush()

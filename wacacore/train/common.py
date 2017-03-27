@@ -74,7 +74,7 @@ def gen_feed_dict(generators, remove_update=False):
         feed_dict.pop('update_step', None)
     return feed_dict
 
-
+# @profile
 def train_loop(sess: Session,
                loss_updates: Sequence[Tensor],
                fetch,

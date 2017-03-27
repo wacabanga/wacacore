@@ -17,10 +17,10 @@ def save_it_csv(params, fname):
     f.close()
 
 
-def pickle_it(data, savedir):
+def pickle_it(data, savedir, protocol=pickle.HIGHEST_PROTOCOL):
     with open(savedir, 'wb') as f:
         # Pickle the 'data' dictionary using the highest protocol available.
-        pickle.dump(data, f, pickle.HIGHEST_PROTOCOL)
+        pickle.dump(data, f, 2) # FIXME: FIX PROTOCL CHOICE
     f.close()
 
 
@@ -99,7 +99,7 @@ def save_options(fetch_data, feed_dict, i: int, **kwargs):
     if save and i == 0:
         savedir = kwargs['savedir']
         options_dir = "options"
-        valid_types = [list, str, float, int]
+        valid_types = [str, float, int]
         to_save_options = {}
         for k, v in kwargs.items():
             if any((isinstance(v, typ) for typ in valid_types)):

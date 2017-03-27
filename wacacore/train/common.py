@@ -5,6 +5,7 @@ import tensorflow as tf
 from tensorflow import Graph, Tensor, Session
 from typing import List, Generator, Callable, Sequence
 import numpy as np
+import pdb
 
 def do_load(options):
     return 'load' in options and options['load'] and 'params_file' in options
@@ -100,6 +101,7 @@ def train_loop(sess: Session,
         num_iterations: number of iterations
         callbacks: functions to be called with result from fetch
     """
+    #pdb.set_trace()
     # Default 1 for loss_ratios and normalize
     loss_ratios = [1 for i in range(len(loss_updates))] if loss_ratios is None else loss_ratios
     loss_ratios = loss_ratios / np.sum(loss_ratios)

@@ -1,17 +1,21 @@
 """Hyper Parameter Search"""
+import time
 from wacacore.util.misc import extract, dict_prod
 import numpy as np
-import time
 
-def rand_product(run_me, options, var_option_keys, nsamples, prefix='', nrepeats=1):
+
+def rand_product(run_me, options, var_option_keys, nsamples, prefix='',
+                 nrepeats=1):
     """Train parametric inverse and vanilla neural network with different
     amounts of data and see the test_error
     Args:
         run_me: function to call, should execute test and save stuff
-        Options: Options to be passed into run_me
+        options: Options to be passed into run_me
         var_option_keys: Set of keys, where options['keys'] is a sequence
             and we will vary over cartesian product of all the keys
-
+        nsamples: sample nsamples hyperparameter values
+        prefix: string prefix for this job
+        nrepeats: for every set of hyper parameters, repeat nrepeats times
     """
     _options = {}
     _options.update(options)

@@ -65,7 +65,7 @@ def updates(loss: Tensor, var_list, options):
         return optimizer, update_step
 
 def gen_feed_dict(generators, remove_update=False):
-    """Generate feed dict for optimization step"""
+    """Generate fetoggle ed dict for optimization step"""
     feed_dict = {}
     for gen in generators:
         sub_feed_dict = next(gen)
@@ -121,17 +121,24 @@ def train_loop(sess: Session,
         curr_fetch["update_loss"] = np.random.choice(loss_updates, p=loss_ratios)
         feed_dict = gen_feed_dict(train_generators)
         fetch_res = sess.run(curr_fetch, feed_dict=feed_dict)
+        print("fetch_res")
+        print(fetch_res)
 
         # Evaluate on test data every test_every iterations
         if test_generators is not None and (i % test_every == 0 or i == num_iterations - 1):
             test_feed_dict = gen_feed_dict(test_generators, True)
             test_fetch_res = sess.run(fetch, feed_dict=test_feed_dict)
             fetch_res['test_fetch_res'] = test_fetch_res
-            print("Test Loss", test_fetch_res['loss'])
-            print("Test Losses", test_fetch_res['losses'])
+            if 'loss' in test_fetch_res:
+                print("Test Loss", test_fetch_res['loss'])
+            if 'losses' in test_fetch_res:
+                print("Test Losses", test_fetch_res['losses'])
 
         # Do all call backs
         for cb in callbacks:
             cb(fetch_res, feed_dict, i, num_iterations=num_iterations, state=state, **callback_dict)
-        print("Iteration: ", i, " Loss: ", fetch_res['loss'])
-        print("Iteration: ", i, " Losses: ", fetch_res['losses'])
+        print("Iteration: ", i)
+        if 'loss' in fetch_res:
+            print(fetch_res['loss'])
+        if 'losses' in fetch_res:
+            print(fetch_res['losses'])

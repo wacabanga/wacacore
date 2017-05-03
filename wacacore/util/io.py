@@ -68,8 +68,9 @@ class PassThroughOptionParser(OptionParser):
                 largs.append(e.opt_str)
 
 
-def handle_args(argv, cust_opts):
+def handle_args(argv, cust_opts=None):
     """Handle getting options from command liner arguments"""
+    cust_opts = {} if cust_opts is None else cust_opts
     custom_long_opts = ["%s=" % k for k in cust_opts.keys()]
     cust_double_dash = ["--%s" % k for k in cust_opts.keys()]
     parser = PassThroughOptionParser()

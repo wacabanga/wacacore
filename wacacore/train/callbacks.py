@@ -93,6 +93,7 @@ def save_everything_last(fetch_data,
         save_callback(fetch_data, feed_dict, i, pfx='last_', **kwargs)
 
 
+
 def save_options(fetch_data, feed_dict, i: int, **kwargs):
     """Save the options"""
     save = 'save' in kwargs and kwargs['save'] is True

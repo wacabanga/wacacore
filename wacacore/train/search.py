@@ -19,9 +19,12 @@ def make_batch_string(options):
     return batch_string
 
 
-def run_sbatch(options, file_path, bash_script='run.sh'):
+def run_sbatch(options, file_path, bash_run_path=None):
     """Execute sbatch with options"""
-    run_str = ['sbatch', bash_script, file_path] + make_batch_string(options)
+    if bash_run_path is None:
+      dir_path = os.path.dirname(os.path.realpath(__file__))
+      bash_run_path = os.path.join(dir_path, 'run.sh')
+    run_str = ['sbatch', bash_run_path, file_path] + make_batch_string(options)
     print(run_str)
     subprocess.call(run_str)
 

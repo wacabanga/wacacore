@@ -29,8 +29,22 @@ def run_sbatch(options, file_path, bash_run_path=None):
     subprocess.call(run_str)
 
 
-def rand_hyper_search(options, file_path, var_options_keys, nsamples, prefix,
-                      nrepeats):
-    """Randomized hyper parameter search"""
+def run_local_batch(options, file_path, bash_run_path=None):
+    """Execute sbatch with options"""
+    run_str = ["python", file_path] + make_batch_string(options)
+    print("Subprocess call:", run_str)
+    subprocess.Popen(run_str)
+
+
+def rand_sbatch_hyper_search(options, file_path, var_options_keys, nsamples,
+                             prefix, nrepeats):
+    """Randomized hyper parameter search locally without slurm"""
     rand_product(lambda options: run_sbatch(options, file_path),
+                 options, var_options_keys, nsamples, prefix, nrepeats)
+
+
+def rand_local_hyper_search(options, file_path, var_options_keys, nsamples,
+                            prefix, nrepeats):
+    """Randomized hyper parameter search using slurm sbatch"""
+    rand_product(lambda options: run_local_batch(options, file_path),
                  options, var_options_keys, nsamples, prefix, nrepeats)

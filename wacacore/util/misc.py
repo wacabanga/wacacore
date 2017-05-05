@@ -114,3 +114,21 @@ def complement_bool(indices: np.ndarray, shape: Sequence) -> Sequence:
     for index in indices:
         bools[tuple(index)] = 1
     return bools
+
+
+def batch_map(inp, func, reduce_func, batch_size):
+    """Batched_map: like map but does a batch at a time then combines
+    Args:
+      inp: input to map over
+      func: function to map with
+      reduce_func: function to combine list of batched mapped values
+      batch_size: number of elements to do in each batch
+    """
+    niters = math.ceil(len(inp) // batch_size)
+    everything = []
+    for i in range(niters):
+        lb = i * batch_size
+        ub = min((i * batch_size) + batch_size, len(inp))
+        batch = inp[lb:ub]
+        everything.append(func(batch))
+    return reduce_func(everything)

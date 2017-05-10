@@ -45,6 +45,11 @@ def setup_file_writers(summaries_dir, sess):
     return [train_writer]
     # test_writer = tf.summary.FileWriter(summaries_dir + '/test')
 
+
+def get_variables(var_scope: str):
+    return tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=var_scope)
+
+
 def updates(loss: Tensor, var_list, options):
     """Generate an update tensor which when executed will perform an
     optimization step
@@ -121,8 +126,6 @@ def train_loop(sess: Session,
         curr_fetch["update_loss"] = np.random.choice(loss_updates, p=loss_ratios)
         feed_dict = gen_feed_dict(train_generators)
         fetch_res = sess.run(curr_fetch, feed_dict=feed_dict)
-        print("fetch_res")
-        print(fetch_res)
 
         # Evaluate on test data every test_every iterations
         if test_generators is not None and (i % test_every == 0 or i == num_iterations - 1):

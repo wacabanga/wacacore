@@ -80,6 +80,50 @@ def gen_feed_dict(generators, remove_update=False):
         feed_dict.pop('update_step', None)
     return feed_dict
 
+
+def train_load_save(sess: Session,
+                    loss_updates: Sequence[Tensor],
+                    fetch,
+                    train_generators: Sequence[Generator],
+                    test_generators: Sequence[Generator],
+                    callbacks: Sequence[Callable],
+                    options) -> Session:
+    """Do some book keeping then train, load and/or save"""
+    # Saving and stuff
+    if 'debug' in options and options['debug'] is True:
+      fetch['check'] = tf.add_check_numerics_ops()
+    loss_ratios = None
+
+    saver = tf.train.Saver()
+    options['saver'] = saver
+    if do_load(options):
+        prep_load(sess, saver, options['params_file'])
+    else:
+        init = tf.global_variables_initializer()
+        sess.run(init)
+    if do_save(options):
+        options['savedir'] = prep_save(options['dirname'], options['datadir'])
+
+    if 'save' in options:
+      summaries_dir = os.path.join(options['savedir'], "summaries")
+      options['writers'] = [tf.summary.FileWriter(summaries_dir, sess.graph)]
+      callbacks = [save_options,
+                   save_every_n,
+                   save_everything_last,
+                   every_n(summary_writes, 100)] + callbacks
+
+    if options['train'] is True:
+      train_loop(sess,
+                 loss_updates,
+                 fetch,
+                 train_generators=train_generators,
+                 test_generators=test_generators,
+                 loss_ratios=loss_ratios,
+                 callbacks=callbacks,
+                 **options)
+    return sess
+
+
 # @profile
 def train_loop(sess: Session,
                loss_updates: Sequence[Tensor],
@@ -90,7 +134,7 @@ def train_loop(sess: Session,
                test_every=100,
                num_iterations=100000,
                callbacks=None,
-               **kwargs):
+               **kwargs) -> Session:
     """Perform training by `num_iterations` optimizaiton steps
     Args:
         sess: Tensorflow session

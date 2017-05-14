@@ -132,3 +132,13 @@ def batch_map(inp, func, reduce_func, batch_size):
         batch = inp[lb:ub]
         everything.append(func(batch))
     return reduce_func(everything)
+
+
+def boolify(x):
+    """Convert x of different type into a bool"""
+    if x in ['0', 0, False, 'False', 'false']:
+        return False
+    elif x in ['1', 1, True, 'True', 'true']:
+        return True
+    else:
+        assert False, "couldn't convert to bool"

@@ -1,23 +1,38 @@
 """Common functions for training"""
-from wacacore.util.io import mk_dir
+import os
+import pdb
+from typing import List, Generator, Callable, Sequence
+
+from wacacore.util.io import mk_dir, gen_sfx_key
 from wacacore.util.misc import inn
+from wacacore.train.callbacks import (save_options, save_every_n,
+    save_everything_last, every_n, summary_writes)
+
 import tensorflow as tf
 from tensorflow import Graph, Tensor, Session
-from typing import List, Generator, Callable, Sequence
+from tensorflow.python import debug as tf_debug
 import numpy as np
-import pdb
+
 
 def do_load(options):
     return 'load' in options and options['load'] and 'params_file' in options
 
+
+def do_train(options):
+    return 'train' in options and options['train'] and 'params_file' in options
+
+
 def do_save(options):
     return inn(options, 'save', 'dirname', 'datadir')
+
 
 def prep_load(sess, saver, params_file):
     saver.restore(sess, params_file)
 
+
 def prep_save(dirname, datadir):
     return mk_dir(dirname=dirname, datadir=datadir)
+
 
 def gen_fetch(sess: Session,
               debug=False,
@@ -80,6 +95,15 @@ def gen_feed_dict(generators, remove_update=False):
         feed_dict.pop('update_step', None)
     return feed_dict
 
+def outside_range(datum, tensor, the_max=1e5, the_min=-1e5):
+    if tensor is None:
+        return False
+    elif (np.issubdtype(tensor.dtype, np.float) or
+        np.issubdtype(tensor.dtype, np.complex)):# or
+        #   np.issubdtype(tensor.dtype, np.integer)):
+        return np.any(tensor > the_max) or np.any(tensor < the_min)
+    else:
+        return False
 
 def train_load_save(sess: Session,
                     loss_updates: Sequence[Tensor],
@@ -91,8 +115,13 @@ def train_load_save(sess: Session,
     """Do some book keeping then train, load and/or save"""
     # Saving and stuff
     if 'debug' in options and options['debug'] is True:
-      fetch['check'] = tf.add_check_numerics_ops()
+        sess = tf_debug.LocalCLIDebugWrapperSession(sess)
+        sess.add_tensor_filter('outside_range', outside_range)
+        sess.add_tensor_filter("has_inf_or_nan", tf_debug.has_inf_or_nan)
+
+    #   fetch['check'] = tf.add_check_numerics_ops()
     loss_ratios = None
+    options['dirname'] = gen_sfx_key(('name',), options)
 
     saver = tf.train.Saver()
     options['saver'] = saver
@@ -104,7 +133,7 @@ def train_load_save(sess: Session,
     if do_save(options):
         options['savedir'] = prep_save(options['dirname'], options['datadir'])
 
-    if 'save' in options:
+    if do_save(options):
       summaries_dir = os.path.join(options['savedir'], "summaries")
       options['writers'] = [tf.summary.FileWriter(summaries_dir, sess.graph)]
       callbacks = [save_options,
@@ -112,7 +141,7 @@ def train_load_save(sess: Session,
                    save_everything_last,
                    every_n(summary_writes, 100)] + callbacks
 
-    if options['train'] is True:
+    if do_train(options) is True:
       train_loop(sess,
                  loss_updates,
                  fetch,

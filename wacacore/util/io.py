@@ -3,7 +3,7 @@ import os
 import csv
 import time
 import sys
-from optparse import (OptionParser,BadOptionError,AmbiguousOptionError)
+from optparse import (OptionParser, BadOptionError, AmbiguousOptionError)
 from wacacore.util.misc import stringy_dict
 
 
